@@ -103,21 +103,23 @@ class OBJECT_PT_custom_panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        scene = context.scene
 
         col = layout.column()
-        col.prop_search(context.scene, "my_obj", context.scene, "objects")
+        col.prop_search(scene, "my_obj", scene, "objects", text="Target Object")
 
         col = layout.column()
-        col.prop(context.scene, "subdivisions", text="Ground Mesh Subdivisions")
+        col.prop(scene, "subdivisions", text="Ground Mesh Subdivisions")
 
         col = layout.column()
-        col.prop(context.scene, "depth", text="Mesh Deletion Depth (%)")
+        col.prop(scene, "depth", text="Mesh Deletion Depth (%)")
 
         col = layout.column()
-        col.prop(context.scene, "duplicate", text="Duplicate Original Mesh")
+        col.prop(scene, "duplicate", text="Duplicate Original Mesh")
 
         col = layout.column()
-        col.operator("object.decimate", text="Run")
+        # Pass the selected object name to the operator
+        col.operator("object.decimate", text="Run").obj_name = scene.my_obj
 
 def register():
     bpy.utils.register_class(OBJECT_OT_decimate)
