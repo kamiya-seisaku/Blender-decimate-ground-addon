@@ -9,12 +9,16 @@ def decimate_ground_faces(context, subdivisions, depth_percent, duplicate):
         bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked": False, "mode": 'TRANSLATION'})
         obj = context.active_object  # Update obj to the new duplicate
 
-    # Switch to edit mode
-    bpy.ops.object.mode_set(mode='EDIT')
+    # Store the current active object name
+    original_obj_name = obj.name
+
+    # Switch to object mode
+    bpy.ops.object.mode_set(mode='OBJECT')
 
     # Add a plane to use as the ground mesh
     bpy.ops.mesh.primitive_plane_add(size=2, enter_editmode=False)
     ground = context.active_object
+    ground.name = original_obj_name + "_ground"
 
     # Subdivide the ground mesh based on the subdivisions parameter
     bpy.ops.object.mode_set(mode='EDIT')
@@ -35,13 +39,16 @@ def decimate_ground_faces(context, subdivisions, depth_percent, duplicate):
     bpy.ops.object.mode_set(mode='OBJECT')
     for vertex in ground.data.vertices:
         # Cast a ray upwards to find the intersection point with the high-poly object
-        hit, location, _, _, _, _ = ground.ray_cast(vertex.co, (0, 0, 1), distance=obj_height)
+        hit, location, normal, index = ground.ray_cast(vertex.co + ground.location, (0, 0, 1), distance=obj_height)
         if hit:
             # Move the vertex up but keep it below the high-poly object by the deletion depth
-            vertex.co.z = location.z - deletion_depth
+            vertex.co.z = location.z - deletion_depth - ground.location.z
+
+    # Select the original high-poly object
+    bpy.data.objects[original_obj_name].select_set(True)
+    context.view_layer.objects.active = bpy.data.objects[original_obj_name]
 
     # Delete faces of the high-poly object that are within the deletion depth
-    bpy.context.view_layer.objects.active = obj
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.object.mode_set(mode='OBJECT')
