@@ -1,16 +1,6 @@
-bl_info = {
-    "name": "Decimate Ground Faces",
-    "author": "kamiya seisaku",
-    "version": (1, 0),
-    "blender": (2, 93, 0),
-    "location": "View3D > N panel > Decimate Tab",
-    "description": "Decimates an object using a grid method",
-    "warning": "",
-    "doc_url": "",
-    "category": "Object",
-}
-
 import bpy
+from bpy.props import StringProperty
+import pdb
 
 def decimate_ground_faces(context, subdivisions, depth_percent, duplicate):
     # Get the active object
@@ -78,6 +68,11 @@ class OBJECT_OT_decimate_ground(bpy.types.Operator):
     bl_idname = "object.decimateground"
     bl_label = "Decimate Ground"
 
+#    fine_obj_name: StringProperty(
+#        name="Fine object name",
+#        size=3,
+#    )
+
     obj_name = bpy.props.StringProperty()
     subdivisions = bpy.props.IntProperty(name="Subdivisions", default=100)
     depth = bpy.props.FloatProperty(name="Depth", default=3.0)
@@ -96,51 +91,36 @@ class OBJECT_OT_decimate_ground(bpy.types.Operator):
         context.view_layer.objects.active = obj
         decimate_ground_faces(context, self.subdivisions, self.depth, self.duplicate)
         return {'FINISHED'}
-    
-class OBJECT_PT_custom_panel(bpy.types.Panel):
-    """Creates a Panel in the Object properties window"""
-    bl_label = "Decimate Object Ground"
-    bl_idname = "OBJECT_PT_custom_panel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'DecimateGround'
+
+class LayoutDemoPanel(bpy.types.Panel):
+    """Creates a Panel in the scene context of the properties editor"""
+    bl_label = "Layout Demo"
+    bl_idname = "SCENE_PT_layout"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "scene"
 
     def draw(self, context):
         layout = self.layout
+
         scene = context.scene
 
-        col = layout.column()
-        col.prop_search(scene, "my_obj", scene, "objects", text="Target Object")
-
-        col = layout.column()
-        col.prop(scene, "subdivisions", text="Ground Mesh Subdivisions")
-
-        col = layout.column()
-        col.prop(scene, "depth", text="Mesh Deletion Depth (%)")
-
-        col = layout.column()
-        col.prop(scene, "duplicate", text="Duplicate Original Mesh")
-
-        col = layout.column()
-        # Pass the selected object name to the operator
-        op = col.operator("object.decimateground", text="Run")
-        op.obj_name = scene.my_obj
+        # Big render button
+        layout.label(text="Big Button key:")
+        row = layout.row()
+        row.scale_y = 3.0
+        row.operator("object.decimateground")
+        row.operator.fine_obj_name = "Suzanne"
 
 def register():
+    bpy.utils.register_class(LayoutDemoPanel)
     bpy.utils.register_class(OBJECT_OT_decimate_ground)
-    bpy.utils.register_class(OBJECT_PT_custom_panel)
-    bpy.types.Scene.my_obj = bpy.props.StringProperty()
-    bpy.types.Scene.subdivisions = bpy.props.IntProperty(name="Subdivisions", default=100)
-    bpy.types.Scene.depth = bpy.props.FloatProperty(name="Depth", default=3.0)
-    bpy.types.Scene.duplicate = bpy.props.BoolProperty(name="Duplicate", default=False)
+
 
 def unregister():
+    bpy.utils.unregister_class(LayoutDemoPanel)
     bpy.utils.unregister_class(OBJECT_OT_decimate_ground)
-    bpy.utils.unregister_class(OBJECT_PT_custom_panel)
-    del bpy.types.Scene.my_obj
-    del bpy.types.Scene.subdivisions
-    del bpy.types.Scene.depth
-    del bpy.types.Scene.duplicate
+
 
 if __name__ == "__main__":
     register()
